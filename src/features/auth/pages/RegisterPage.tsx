@@ -85,7 +85,7 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <div>
           <label
-            htmlFor="register-name"
+            htmlFor="register-name-input"
             className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
           >
             Nama Lengkap
@@ -96,7 +96,7 @@ export default function RegisterPage() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
             <input
-              id="register-name"
+              id="register-name-input"
               name="name"
               type="text"
               autoComplete="name"
@@ -110,7 +110,7 @@ export default function RegisterPage() {
 
         <div>
           <label
-            htmlFor="register-email"
+            htmlFor="register-email-input"
             className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
           >
             Email
@@ -121,7 +121,7 @@ export default function RegisterPage() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
             <input
-              id="register-email"
+              id="register-email-input"
               name="email"
               type="email"
               autoComplete="email"
@@ -135,7 +135,7 @@ export default function RegisterPage() {
 
         <div>
           <label
-            htmlFor="register-password"
+            htmlFor="register-password-input"
             className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
           >
             Kata Sandi
@@ -146,7 +146,7 @@ export default function RegisterPage() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
             <input
-              id="register-password"
+              id="register-password-input"
               name="password"
               type="password"
               autoComplete="new-password"
@@ -162,6 +162,7 @@ export default function RegisterPage() {
         </div>
 
         <button
+          id="register-submit-button"
           type="submit"
           disabled={isAuthRegister}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"

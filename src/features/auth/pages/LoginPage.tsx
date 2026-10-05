@@ -68,7 +68,7 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <div>
           <label
-            htmlFor="login-email"
+            htmlFor="login-email-input"
             className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
           >
             Email
@@ -79,7 +79,7 @@ export default function LoginPage() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
             <input
-              id="login-email"
+              id="login-email-input"
               name="email"
               type="email"
               autoComplete="email"
@@ -93,7 +93,7 @@ export default function LoginPage() {
 
         <div>
           <label
-            htmlFor="login-password"
+            htmlFor="login-password-input"
             className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200"
           >
             Kata Sandi
@@ -104,7 +104,7 @@ export default function LoginPage() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
             <input
-              id="login-password"
+              id="login-password-input"
               name="password"
               type="password"
               autoComplete="current-password"
@@ -117,6 +117,7 @@ export default function LoginPage() {
         </div>
 
         <button
+          id="login-submit-button"
           type="submit"
           disabled={isAuthLogin}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
