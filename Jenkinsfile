@@ -23,7 +23,11 @@ pipeline {
             }
 
             steps {
+<<<<<<< HEAD
                 // Melakukan checkout eksplisit ke branch master
+=======
+                // Spesifikasikan branch 'master' dan kredensial Git Anda
+>>>>>>> 1d14a04a075b69b21ccba231a4a4462861aca39d
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: '*/master']],
