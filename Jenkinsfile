@@ -23,7 +23,18 @@ pipeline {
             }
 
             steps {
-                checkout scm
+                // Spesifikasikan branch 'master' dan kredensial Git Anda
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/master']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[
+                        credentialsId: 'github-Aditya-Ifs03',
+                        url: 'https://github.com/Aditya-Ifs03/ifs24003-pabwe2026-nextjs.git'
+                    ]]
+                ])
             }
         }
 
@@ -123,9 +134,6 @@ pipeline {
 
             post {
                 always {
-                    // failOnError must be false: otherwise Warnings NG can mark the
-                    // whole build FAILURE while later stages still run (all green, badge red).
-                    // Build failure on HIGH/CRITICAL comes from trivy --exit-code 1 above.
                     recordIssues(
                         enabledForFailure: true,
                         failOnError: false,
@@ -231,10 +239,6 @@ pipeline {
 
             steps {
 
-                // ========================================================
-                // 1. ARCHIVE ARTIFACT KE JENKINS
-                // ========================================================
-
                 archiveArtifacts(
                     artifacts: 'latest-app.zip',
                     fingerprint: true,
@@ -242,10 +246,6 @@ pipeline {
                 )
 
                 script {
-
-                    // ====================================================
-                    // 2. BUAT IDENTITAS APPLICATION
-                    // ====================================================
 
                     def appName = env.JOB_NAME
                         .replaceAll('[^a-zA-Z0-9._-]', '-')
@@ -256,10 +256,6 @@ pipeline {
 
                     echo "Application Name: ${appName}"
                     echo "Build ID: ${buildId}"
-
-                    // ====================================================
-                    // 3. COPY KE USER CONTENT
-                    // ====================================================
 
                     sh """
                         set -e
@@ -282,10 +278,6 @@ pipeline {
                             ls -lh \
                             "/var/jenkins_home/userContent/applications/${appName}/${buildId}/latest-app.zip"
                     """
-
-                    // ====================================================
-                    // 4. BUAT PUBLIC ARTIFACT URL
-                    // ====================================================
 
                     def jenkinsBaseUrl = env.BUILD_URL
                         .substring(0, env.BUILD_URL.indexOf('/job/'))
@@ -326,10 +318,6 @@ pipeline {
                     echo "Artifact URL:"
                     echo "${env.ARTIFACT_URL}"
 
-                    // ==================================================
-                    // 1. REQUEST REDEPLOYMENT
-                    // ==================================================
-
                     echo ""
                     echo "=== Request Redeployment ==="
 
@@ -352,10 +340,6 @@ pipeline {
 
                     echo "Redeploy Response:"
                     echo redeployResponse
-
-                    // ==================================================
-                    // 2. POLLING DEPLOYMENT PROGRESS
-                    // ==================================================
 
                     echo ""
                     echo "=== Waiting For Deployment ==="
@@ -399,10 +383,6 @@ pipeline {
                         echo "Progress Response:"
                         echo progressResponse
 
-                        // ==================================================
-                        // PARSE JSON
-                        // ==================================================
-
                         def json = readJSON text: progressResponse
 
                         deploymentStatus = json?.data?.status
@@ -417,10 +397,6 @@ pipeline {
 
                         echo "Deployment Status: ${deploymentStatus}"
 
-                        // ==================================================
-                        // SUCCESS
-                        // ==================================================
-
                         if (deploymentStatus == 'SUCCESS') {
 
                             echo ""
@@ -430,10 +406,6 @@ pipeline {
 
                             break
                         }
-
-                        // ==================================================
-                        // FAIL
-                        // ==================================================
 
                         if (deploymentStatus == 'FAIL') {
 
@@ -456,10 +428,6 @@ pipeline {
                                 "${WEBSITE_ID}"
                             )
                         }
-
-                        // ==================================================
-                        // OTHER STATUS
-                        // ==================================================
 
                         echo "Deployment masih berjalan..."
                     }
