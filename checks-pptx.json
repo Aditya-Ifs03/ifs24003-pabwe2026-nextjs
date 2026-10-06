@@ -1,0 +1,44 @@
+{
+  "format": "pptx",
+  "verdict": "pass",
+  "checks": [
+    {
+      "id": "package",
+      "status": "pass"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "Delcom Postingan"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "apiFetch"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "coverage 100%"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "Separation of Concern"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "Sekian presentasi"
+    },
+    {
+      "id": "count",
+      "status": "pass",
+      "expected": 22,
+      "actual": 22
+    }
+  ],
+  "summary": {
+    "slides": 22
+  }
+}
