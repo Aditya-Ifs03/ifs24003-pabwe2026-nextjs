@@ -7,14 +7,18 @@ import next from "next";
 /**
  * Server launcher aplikasi (TypeScript).
  *
- * Menjalankan Next.js secara programatik dan membaca port secara dinamis dari
- * variabel lingkungan `APP_PORT`.
+ * Menjalankan Next.js secara programatik dan membaca port secara dinamis.
  *
  * Urutan pencarian port:
- *   1. `process.env.APP_PORT`  (diisi otomatis dari `.env` / `.env.local`)
- *   2. `APP_PORT` pada berkas `.env`
- *   3. `APP_PORT` pada berkas `.env.example`
- *   4. `3000` sebagai nilai cadangan
+ *   1. `process.env.APP_PORT`
+ *   2. `process.env.PORT`  (dipakai banyak platform hosting, termasuk Delcom)
+ *   3. `APP_PORT` pada berkas `.env`
+ *   4. `APP_PORT` pada berkas `.env.example`
+ *   5. `3000` sebagai nilai cadangan
+ *
+ * Mode dijalankan hanya bila `NODE_ENV` bernilai `development`. Dengan begitu
+ * perintah `bun run start` tetap berjalan dalam mode produksi walau
+ * `NODE_ENV` tidak diset oleh platform hosting.
  */
 
 const DEFAULT_PORT = 3000;
@@ -43,6 +47,7 @@ export function readPortFromEnvFile(fileName: string): string | undefined {
 export function resolvePort(): number {
   const raw =
     process.env.APP_PORT ||
+    process.env.PORT ||
     readPortFromEnvFile(".env") ||
     readPortFromEnvFile(".env.example");
 
@@ -50,13 +55,19 @@ export function resolvePort(): number {
   return Number.isNaN(parsed) ? DEFAULT_PORT : parsed;
 }
 
+/** Menentukan apakah server berjalan dalam mode pengembangan. */
+export function isDevelopment(): boolean {
+  return process.env.NODE_ENV === "development";
+}
+
 async function main(): Promise<void> {
+  const dev = isDevelopment();
+
   // Memuat `.env`, `.env.local`, dst. ke dalam `process.env` sebelum dibaca.
   const { loadEnvConfig } = await import("@next/env");
-  loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production");
+  loadEnvConfig(process.cwd(), dev);
 
   const port = resolvePort();
-  const dev = process.env.NODE_ENV !== "production";
   const app = next({ dev, port });
   const handle = app.getRequestHandler();
 

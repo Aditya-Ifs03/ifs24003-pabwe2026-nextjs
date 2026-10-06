@@ -42,3 +42,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# artefak CI/CD (dibuat oleh Jenkinsfile)
+.trivy-cache/
+trivy-results.sarif
+latest-app.zip

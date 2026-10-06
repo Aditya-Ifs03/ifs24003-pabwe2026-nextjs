@@ -1,0 +1,28 @@
+# ============================================================================
+# Daftar pengecualian Trivy (.trivyignore)
+#
+# Stage "Trivy Security Scan" pada Jenkinsfile memakai `--exit-code 1`, sehingga
+# SATU temuan HIGH/CRITICAL saja akan menggagalkan seluruh pipeline. Berkas ini
+# dipakai untuk mengecualikan temuan yang sudah ditinjau dan tidak dapat
+# diperbaiki saat ini.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# CVE-2026-93687 — braces: stack-exhaustion DoS melalui pola bersarang dalam
+# GHSA: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
+#
+# Alasan dikecualikan:
+#  1. TIDAK ADA VERSI PERBAIKAN. Rentang rentan adalah `<=3.0.3`, sedangkan
+#     3.0.3 (rilis 21 Mei 2024) adalah versi TERBARU yang tersedia di npm.
+#     Jadi tidak ada upgrade yang bisa dilakukan.
+#  2. Bukan dependensi runtime. `braces` masuk secara transitif lewat
+#     micromatch <- perkakas build/dev (ESLint, Tailwind, Vite/Vitest).
+#     Paket ini tidak ikut dikirim ke browser maupun ke server produksi.
+#  3. Tidak dapat dieksploitasi dari luar. Serangan ini butuh pemanggil
+#     memasukkan pola glob bersarang sangat dalam; pada alur build, polanya
+#     berasal dari konfigurasi proyek sendiri, bukan dari masukan pengguna.
+#
+# Tindakan: ditinjau dan diterima sebagai risiko rendah untuk lingkungan
+# build. Hapus baris ini begitu braces merilis versi > 3.0.3.
+# ----------------------------------------------------------------------------
+CVE-2026-93687

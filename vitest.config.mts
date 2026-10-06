@@ -16,6 +16,12 @@ export default defineConfig({
     setupFiles: ["./src/setupTests.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     css: false,
+    // Timeout bawaan (5 detik) terlalu ketat untuk pengujian interaksi yang
+    // memakai @testing-library/user-event. Pada mesin yang sedang sibuk atau di
+    // dalam container CI (mis. container Docker Jenkins) yang masih dingin,
+    // pengujian yang sebenarnya lulus bisa gagal hanya karena waktu habis.
+    testTimeout: 30000,
+    hookTimeout: 30000,
     coverage: {
       provider: "v8",
       reporter: ["text", "text-summary", "html", "lcov", "json"],

@@ -1,12 +1,12 @@
 {
-  "name": "ifs24003-pabwer2026-nextjs",
+  "name": "ifs24003-pabwe2026-nextjs",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "bun run src/server.ts",
+    "dev": "cross-env NODE_ENV=development bun run src/server.ts",
     "dev:next": "next dev",
     "build": "next build",
-    "start": "cross-env NODE_ENV=production bun run src/server.ts",
+    "start": "bun run src/server.ts",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run --coverage",
