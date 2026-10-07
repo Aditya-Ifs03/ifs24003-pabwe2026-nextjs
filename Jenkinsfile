@@ -326,6 +326,11 @@ pipeline {
                     echo "Artifact URL:"
                     echo "${env.ARTIFACT_URL}"
 
+                    // Pengecekan awal variabel lingkungan
+                    if (!env.URL_REDEPLOY || !env.DEPLOY_TOKEN || !env.WEBSITE_ID) {
+                        error("Deployment dibatalkan: Environment variable URL_REDEPLOY, DEPLOY_TOKEN, atau WEBSITE_ID belum dikonfigurasi di Jenkins!")
+                    }
+
                     // ==================================================
                     // 1. REQUEST REDEPLOYMENT
                     // ==================================================
@@ -338,14 +343,15 @@ pipeline {
                             set -e
 
                             curl -sS --fail-with-body \
-                                -X POST "$URL_REDEPLOY" \
+                                -X POST \
                                 -H "Content-Type: application/json" \
                                 -d "{
                                     \\"token_access\\": \\"$DEPLOY_TOKEN\\",
                                     \\"website_id\\": \\"$WEBSITE_ID\\",
                                     \\"source_url\\": \\"$ARTIFACT_URL\\",
                                     \\"source_type\\": \\"jenkins\\"
-                                }"
+                                }" \
+                                "$URL_REDEPLOY"
                         ''',
                         returnStdout: true
                     ).trim()
@@ -386,12 +392,13 @@ pipeline {
                                 set -e
 
                                 curl -sS --fail-with-body \
-                                    -X POST "$URL_PROGRESS" \
+                                    -X POST \
                                     -H "Content-Type: application/json" \
                                     -d "{
                                         \\"token_access\\": \\"$DEPLOY_TOKEN\\",
                                         \\"website_id\\": \\"$WEBSITE_ID\\"
-                                    }"
+                                    }" \
+                                    "$URL_PROGRESS"
                             ''',
                             returnStdout: true
                         ).trim()
