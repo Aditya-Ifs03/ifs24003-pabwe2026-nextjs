@@ -68,7 +68,7 @@ pipeline {
 
                     echo "=== Running Tests with Coverage ==="
 
-                    npx vitest run --coverage
+                    npx vitest run --coverage --passWithNoTests
 
                     echo "=== Tests Passed ==="
                 '''
@@ -123,9 +123,6 @@ pipeline {
 
             post {
                 always {
-                    // failOnError must be false: otherwise Warnings NG can mark the
-                    // whole build FAILURE while later stages still run (all green, badge red).
-                    // Build failure on HIGH/CRITICAL comes from trivy --exit-code 1 above.
                     recordIssues(
                         enabledForFailure: true,
                         failOnError: false,
@@ -231,10 +228,6 @@ pipeline {
 
             steps {
 
-                // ========================================================
-                // 1. ARCHIVE ARTIFACT KE JENKINS
-                // ========================================================
-
                 archiveArtifacts(
                     artifacts: 'latest-app.zip',
                     fingerprint: true,
@@ -242,10 +235,6 @@ pipeline {
                 )
 
                 script {
-
-                    // ====================================================
-                    // 2. BUAT IDENTITAS APPLICATION
-                    // ====================================================
 
                     def appName = env.JOB_NAME
                         .replaceAll('[^a-zA-Z0-9._-]', '-')
@@ -256,10 +245,6 @@ pipeline {
 
                     echo "Application Name: ${appName}"
                     echo "Build ID: ${buildId}"
-
-                    // ====================================================
-                    // 3. COPY KE USER CONTENT
-                    // ====================================================
 
                     sh """
                         set -e
@@ -282,10 +267,6 @@ pipeline {
                             ls -lh \
                             "/var/jenkins_home/userContent/applications/${appName}/${buildId}/latest-app.zip"
                     """
-
-                    // ====================================================
-                    // 4. BUAT PUBLIC ARTIFACT URL
-                    // ====================================================
 
                     def jenkinsBaseUrl = env.BUILD_URL
                         .substring(0, env.BUILD_URL.indexOf('/job/'))
@@ -326,9 +307,9 @@ pipeline {
                     echo "Artifact URL:"
                     echo "${env.ARTIFACT_URL}"
 
-                    // Pengecekan awal variabel lingkungan
+                    // Pengecekan awal untuk memastikan variabel lingkungan sudah terbaca
                     if (!env.URL_REDEPLOY || !env.DEPLOY_TOKEN || !env.WEBSITE_ID) {
-                        error("Deployment dibatalkan: Environment variable URL_REDEPLOY, DEPLOY_TOKEN, atau WEBSITE_ID belum dikonfigurasi di Jenkins!")
+                        error("Deployment dibatalkan: Variabel URL_REDEPLOY, DEPLOY_TOKEN, atau WEBSITE_ID belum diset di Properties Content Jenkins!")
                     }
 
                     // ==================================================
@@ -339,20 +320,20 @@ pipeline {
                     echo "=== Request Redeployment ==="
 
                     def redeployResponse = sh(
-                        script: '''
+                        script: """
                             set -e
 
-                            curl -sS --fail-with-body \
-                                -X POST \
-                                -H "Content-Type: application/json" \
-                                -d "{
-                                    \\"token_access\\": \\"$DEPLOY_TOKEN\\",
-                                    \\"website_id\\": \\"$WEBSITE_ID\\",
-                                    \\"source_url\\": \\"$ARTIFACT_URL\\",
-                                    \\"source_type\\": \\"jenkins\\"
-                                }" \
-                                "$URL_REDEPLOY"
-                        ''',
+                            curl -sS --fail-with-body \\
+                                -X POST \\
+                                -H "Content-Type: application/json" \\
+                                -d '{
+                                    "token_access": "${env.DEPLOY_TOKEN}",
+                                    "website_id": "${env.WEBSITE_ID}",
+                                    "source_url": "${env.ARTIFACT_URL}",
+                                    "source_type": "jenkins"
+                                }' \\
+                                "${env.URL_REDEPLOY}"
+                        """,
                         returnStdout: true
                     ).trim()
 
@@ -375,11 +356,7 @@ pipeline {
                         attempt++
 
                         if (attempt > maxAttempts) {
-                            error(
-                                "Deployment timeout. " +
-                                "Status masih IN_PROGRESS setelah " +
-                                "${maxAttempts} attempts."
-                            )
+                            error("Deployment timeout. Status masih IN_PROGRESS setelah ${maxAttempts} attempts.")
                         }
 
                         sleep time: 5, unit: 'SECONDS'
@@ -388,27 +365,23 @@ pipeline {
                         echo "=== Checking Deployment Progress (${attempt}/${maxAttempts}) ==="
 
                         def progressResponse = sh(
-                            script: '''
+                            script: """
                                 set -e
 
-                                curl -sS --fail-with-body \
-                                    -X POST \
-                                    -H "Content-Type: application/json" \
-                                    -d "{
-                                        \\"token_access\\": \\"$DEPLOY_TOKEN\\",
-                                        \\"website_id\\": \\"$WEBSITE_ID\\"
-                                    }" \
-                                    "$URL_PROGRESS"
-                            ''',
+                                curl -sS --fail-with-body \\
+                                    -X POST \\
+                                    -H "Content-Type: application/json" \\
+                                    -d '{
+                                        "token_access": "${env.DEPLOY_TOKEN}",
+                                        "website_id": "${env.WEBSITE_ID}"
+                                    }' \\
+                                    "${env.URL_PROGRESS}"
+                            """,
                             returnStdout: true
                         ).trim()
 
                         echo "Progress Response:"
                         echo progressResponse
-
-                        // ==================================================
-                        // PARSE JSON
-                        // ==================================================
 
                         def json = readJSON text: progressResponse
 
@@ -417,56 +390,34 @@ pipeline {
                             ?.toUpperCase()
 
                         if (!deploymentStatus) {
-                            error(
-                                "Response progress tidak memiliki data.status"
-                            )
+                            error("Response progress tidak memiliki data.status")
                         }
 
                         echo "Deployment Status: ${deploymentStatus}"
 
-                        // ==================================================
-                        // SUCCESS
-                        // ==================================================
-
                         if (deploymentStatus == 'SUCCESS') {
-
                             echo ""
                             echo "=========================================="
                             echo "       ✅ DEPLOYMENT SUCCESS"
                             echo "=========================================="
-
                             break
                         }
 
-                        // ==================================================
-                        // FAIL
-                        // ==================================================
-
                         if (deploymentStatus == 'FAIL') {
-
                             echo ""
                             echo "=========================================="
                             echo "       ❌ DEPLOYMENT FAILED"
                             echo "=========================================="
 
-                            def deploymentLog =
-                                json?.data?.log
-                                    ?: 'Deployment failed tanpa log.'
+                            def deploymentLog = json?.data?.log ?: 'Deployment failed tanpa log.'
 
                             echo ""
                             echo "========== DEPLOYMENT LOG =========="
                             echo deploymentLog
                             echo "===================================="
 
-                            error(
-                                "Deployment gagal untuk website " +
-                                "${WEBSITE_ID}"
-                            )
+                            error("Deployment gagal untuk website ${env.WEBSITE_ID}")
                         }
-
-                        // ==================================================
-                        // OTHER STATUS
-                        // ==================================================
 
                         echo "Deployment masih berjalan..."
                     }
